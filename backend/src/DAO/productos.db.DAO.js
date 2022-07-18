@@ -1,8 +1,8 @@
-import ProductosDao from "./productos.DAO.js";
-import {ProductsModel}  from "../modules/Products.model.js";
-import CustomError from "../errores/CustomError.js";
-import MyMongoClient from "../configs/db.clientMongo.config.js";
-import Config from "../configs/db.config.js";
+import ProductosDao from './productos.DAO.js';
+import { ProductsModel } from '../modules/Products.model.js';
+import CustomError from '../errores/CustomError.js';
+import MyMongoClient from '../configs/db.clientMongo.config.js';
+import Config from '../configs/db.config.js';
 
 class ProductosDaoDb extends ProductosDao {
   constructor() {
@@ -17,20 +17,25 @@ class ProductosDaoDb extends ProductosDao {
       const buscados = await ProductsModel.find({}, this.projection).lean();
       return buscados;
     } catch (err) {
-      throw new CustomError(500, "error al obtener todos los productos", err);
+      throw new CustomError(500, 'error al obtener todos los productos', err);
     }
   }
 
   async getById(idBuscado) {
     let buscado;
     try {
-      buscado = await ProductsModel.findOne({ _id: idBuscado }, this.projection);
+      buscado = await ProductsModel.findOne(
+        { _id: idBuscado },
+        this.projection
+      );
     } catch (err) {
-      throw new CustomError(500, "error al buscar producto por dni", err);
+      throw new CustomError(500, 'error al buscar producto por dni', err);
     }
 
     if (!buscado) {
-      throw new CustomError(404, "producto no encontrado con ese ID", { id: idBuscado });
+      throw new CustomError(404, 'producto no encontrado con ese ID', {
+        id: idBuscado,
+      });
     }
 
     return [buscado];
@@ -38,10 +43,10 @@ class ProductosDaoDb extends ProductosDao {
 
   async add(prodNuevo) {
     try {
-      console.log(prodNuevo)
+      console.log(prodNuevo);
       return await ProductsModel.create(prodNuevo);
     } catch (error) {
-      throw new CustomError(500, "error al crear un nuevo producto", error);
+      throw new CustomError(500, 'error al crear un nuevo producto', error);
     }
   }
 
@@ -49,14 +54,19 @@ class ProductosDaoDb extends ProductosDao {
     let result;
     try {
       result = await ProductsModel.deleteOne({ _id: idParaBorrar });
+      if (result.deletedCount == 0) {
+        throw new CustomError(
+          404,
+          `no existe un producto para borrar con id: ${idParaBorrar}`,
+          {
+            idParaBorrar,
+          }
+        );
+      } else {
+        return result;
+      }
     } catch (error) {
       throw new CustomError(500, `error al borrar producto`, error);
-    }
-
-    if (result.deletedCount == 0) {
-      throw new CustomError(404, `no existe un producto para borrar con id: ${idParaBorrar}`, {
-        idParaBorrar,
-      });
     }
   }
 
@@ -64,7 +74,11 @@ class ProductosDaoDb extends ProductosDao {
     try {
       await ProductsModel.deleteMany();
     } catch (error) {
-      throw new CustomError(500, `error al borrar a todos los productos`, error);
+      throw new CustomError(
+        500,
+        `error al borrar a todos los productos`,
+        error
+      );
     }
   }
 
@@ -74,21 +88,20 @@ class ProductosDaoDb extends ProductosDao {
       result = await ProductsModel.findOneAndReplace(
         { _id: idParaReemplazar },
         nuevoProd,
-        this.projection,
+        this.projection
       );
+      if (!result) {
+        throw new CustomError(
+          404,
+          `no se encontró para actualizar un producto con id: ${idParaReemplazar}`,
+          { idParaReemplazar }
+        );
+      }
+
+      return nuevoProd;
     } catch (error) {
       throw new CustomError(500, `error al reemplazar al producto`, error);
     }
-
-    if (!result) {
-      throw new CustomError(
-        404,
-        `no se encontró para actualizar un producto con id: ${idParaReemplazar}`,
-        { idParaReemplazar },
-      );
-    }
-
-    return nuevoProd;
   }
   exit() {
     this.client.disconnect();

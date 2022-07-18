@@ -23,9 +23,9 @@ export default class ProductosApi {
 
   async borrar(id) {
     if (id) {
-      await this.productosDao.deleteById(id);
+      return await this.productosDao.deleteById(id);
     } else {
-      await this.productosDao.deleteAll();
+      return await this.productosDao.deleteAll();
     }
   }
 

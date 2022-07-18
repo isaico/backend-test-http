@@ -1,5 +1,4 @@
 import axios from 'axios';
-// import { getProducts } from "./src/Controllers.js";
 
 async function getProducts() {
   try {
